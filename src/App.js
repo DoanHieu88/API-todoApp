@@ -1,23 +1,60 @@
-import logo from './logo.svg';
+import { api } from './config/api';
+import {useEffect,useState} from 'react'
 import './App.css';
+import Header from './component/Header';
+import TodoList from './component/TodoList';
+import Footer from './component/Footer';
 
 function App() {
+  const [todoList, settodoList] = useState([]);
+
+  // thêm dữ liệu vào database
+  const addData = async (job) =>{
+    try {
+      await api.post(`TodoApp`, {
+        task: job,
+        isDone: false
+    })
+    } catch (error) {
+      alert(error)
+    }
+
+    showData()
+  }
+
+  // hiển thị dữ liệu
+  useEffect( () => {
+    showData()
+  }, []);
+
+  const showData = async ()=>{
+    try {
+      const tasks=  await api.get(`TodoApp`);
+      settodoList(tasks.data)
+    } catch (error) {
+      alert("error", error)
+    }
+  }
+
+
+  // xóa dữ liệu
+  const deleteJob = async (id) => {
+    await api.delete(`TodoApp/${id}`);
+
+    showData()
+  }
+
+  // xoá tất cả dữ liệu
+  const clearAll = () => {
+    settodoList([]);
+
+    api.delete(`todoApp/`)
+  }
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container">
+      <Header addData= {addData}/>
+      <TodoList todoList= {todoList} deleteJob={deleteJob}/>
+      <Footer allTask={todoList.length} clearAll= {clearAll}/>
     </div>
   );
 }
